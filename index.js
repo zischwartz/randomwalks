@@ -1,5 +1,24 @@
 // https://bl.ocks.org/josiahdavis/7a02e811360ff00c4eef
-const csv_file_path = require("./giniLine.csv");
+
+// reset for hmr in dev
+d3.select("#chart")
+  .selectAll("*")
+  .remove();
+
+// generate my data
+function create_data() {
+  let data = [];
+  for (var i = 0; i < 20; i++) {
+    let line = d3.range(-10 + i, 10 + i);
+    data.push(line);
+    // array[i]
+  }
+  return data;
+}
+
+let data = create_data();
+
+// const csv_file_path = require("./giniLine.csv");
 // Define margins
 var margin = { top: 20, right: 80, bottom: 30, left: 50 },
   width =
@@ -8,29 +27,33 @@ var margin = { top: 20, right: 80, bottom: 30, left: 50 },
     parseInt(d3.select("#chart").style("height")) - margin.top - margin.bottom;
 
 // Define date parser
-var parseDate = d3.timeParse("%Y-%m-%d %H:%M:%S");
+// var parseDate = d3.timeParse("%Y-%m-%d %H:%M:%S");
 
 // Define scales
-var xScale = d3.scaleTime().range([0, width]);
+// var xScale = d3.scaleTime().range([0, width]);
+var xScale = d3.scaleLinear().range([0, width]);
 var yScale = d3.scaleLinear().range([height, 0]);
-var color = d3.scaleOrdinal().range(["#8c510a", "#dfc27d", "#35978f"]);
+var color = d3
+  .scaleOrdinal()
+  .range(d3.schemeCategory10)
+  .domain([0, data.length]);
 
 // Define axes
 var xAxis = d3.axisBottom().scale(xScale);
-// .orient("bottom");
 var yAxis = d3.axisLeft().scale(yScale);
-// .orient("left");
 
 // Define lines
 var line = d3
   .line()
-  .curve(d3.curveMonotoneX)
-  // .interpolate("basis")
-  .x(function(d) {
-    return xScale(d["date"]);
+  .curve(d3.curveStep)
+  // .curve(d3.curveMonotoneX)
+  .x(function(d, i) {
+    return xScale(i);
+    // return xScale(d["date"]);
   })
   .y(function(d) {
-    return yScale(d["concentration"]);
+    return yScale(d);
+    // return yScale(d["concentration"]);
   });
 
 // Define svg canvas
@@ -42,92 +65,103 @@ var svg = d3
   .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
 // Read in data
-d3.csv(csv_file_path).then(function(data) {
-  // if (error) throw error;
-  // console.log(error, data);
+// d3.csv(csv_file_path).then(function(data) {
+// if (error) throw error;
+// console.log(error, data);
 
-  // Set the color domain equal to the three product categories
-  var productCategories = d3.keys(data[0]).filter(function(key) {
-    return key !== "Order Month" && key !== "metric";
+// Set the color domain equal to the three product categories
+// var productCategories = d3.keys(data[0]).filter(function(key) {
+//   return key !== "Order Month" && key !== "metric";
+// });
+// color.domain(productCategories);
+
+// console.log(JSON.stringify(data, null, 2)) // to view the structure
+
+// Format the data field
+// data.forEach(function(d) {
+//   d["Order Month"] = parseDate(d["Order Month"]);
+// });
+//
+// // Filter the data to only include a single metric
+// var subset = data.filter(function(el) {
+//   return el.metric === "Quantity";
+// });
+// console.log(JSON.stringify(subset, null, 2))
+
+// Reformat data to make it more copasetic for d3
+// data = An array of objects
+// concentrations = An array of three objects, each of which contains an array of objects
+// var concentrations = productCategories.map(function(category) {
+//   return {
+//     category: category,
+//     datapoints: subset.map(function(d) {
+//       return { date: d["Order Month"], concentration: +d[category] };
+//     })
+//   };
+// });
+// console.log(JSON.stringify(concentrations, null, 2)) // to view the structure
+
+// Set the domain of the axes
+xScale.domain(
+  d3.extent(data, function(d, i) {
+    return i;
+    // return d;
+  })
+);
+
+yScale.domain(
+  d3.extent(data.flat(), function(d, i) {
+    return d;
+  })
+);
+
+// yScale.domain([0.25, 0.5]);
+
+// Place the axes on the chart
+svg
+  .append("g")
+  .attr("class", "x axis")
+  .attr("transform", "translate(0," + height + ")")
+  .call(xAxis);
+
+svg
+  .append("g")
+  .attr("class", "y axis")
+  .call(yAxis)
+  .append("text")
+  .attr("class", "label")
+  .attr("y", 6)
+  .attr("dy", ".71em")
+  .attr("dx", ".71em")
+  .style("text-anchor", "beginning")
+  .text("Product Concentration");
+
+// console.log(data);
+var products = svg
+  .selectAll(".category")
+  .data(data)
+  .enter()
+  .append("g")
+  .attr("class", "category");
+//
+products
+  .append("path")
+  .attr("class", "line")
+  .attr("d", function(d) {
+    console.log(d);
+    return line(d);
+  })
+  .style("stroke", function(d, i) {
+    return color(i);
+    // return "black";
   });
-  color.domain(productCategories);
 
-  // console.log(JSON.stringify(data, null, 2)) // to view the structure
+// console.log(JSON.stringify(d3.values(concentrations), null, 2)) // to view the structure
+// console.log(d3.values(concentrations)); // to view the structure
+// console.log(concentrations);
+// console.log(concentrations.map(function()))
 
-  // Format the data field
-  data.forEach(function(d) {
-    d["Order Month"] = parseDate(d["Order Month"]);
-  });
-
-  // Filter the data to only include a single metric
-  var subset = data.filter(function(el) {
-    return el.metric === "Quantity";
-  });
-  // console.log(JSON.stringify(subset, null, 2))
-
-  // Reformat data to make it more copasetic for d3
-  // data = An array of objects
-  // concentrations = An array of three objects, each of which contains an array of objects
-  var concentrations = productCategories.map(function(category) {
-    return {
-      category: category,
-      datapoints: subset.map(function(d) {
-        return { date: d["Order Month"], concentration: +d[category] };
-      })
-    };
-  });
-  // console.log(JSON.stringify(concentrations, null, 2)) // to view the structure
-
-  // Set the domain of the axes
-  xScale.domain(
-    d3.extent(subset, function(d) {
-      return d["Order Month"];
-    })
-  );
-
-  yScale.domain([0.25, 0.5]);
-
-  // Place the axes on the chart
-  svg
-    .append("g")
-    .attr("class", "x axis")
-    .attr("transform", "translate(0," + height + ")")
-    .call(xAxis);
-
-  svg
-    .append("g")
-    .attr("class", "y axis")
-    .call(yAxis)
-    .append("text")
-    .attr("class", "label")
-    .attr("y", 6)
-    .attr("dy", ".71em")
-    .attr("dx", ".71em")
-    .style("text-anchor", "beginning")
-    .text("Product Concentration");
-
-  var products = svg
-    .selectAll(".category")
-    .data(concentrations)
-    .enter()
-    .append("g")
-    .attr("class", "category");
-
-  products
-    .append("path")
-    .attr("class", "line")
-    .attr("d", function(d) {
-      return line(d.datapoints);
-    })
-    .style("stroke", function(d) {
-      return color(d.category);
-    });
-
-  // console.log(JSON.stringify(d3.values(concentrations), null, 2)) // to view the structure
-  console.log(d3.values(concentrations)); // to view the structure
-  console.log(concentrations);
-  // console.log(concentrations.map(function()))
-});
+// });
 
 // Define responsive behavior
 function resize() {
@@ -152,7 +186,7 @@ function resize() {
 
   // Force D3 to recalculate and update the line
   svg.selectAll(".line").attr("d", function(d) {
-    return line(d.datapoints);
+    return line(d);
   });
 
   // Update the tick marks
