@@ -123,7 +123,7 @@ var mult = parseInt(undefined) || 0.01; // 1 gives us touching grid, 2 gives us 
 // console.log(process.env.DB_HOST);
 // reset for hmr in dev
 
-d3.select("#chart").selectAll("*").remove(); // console.log(process.env.MULT)
+d3.select("svg").selectAll("*").remove(); // console.log(process.env.MULT)
 // generate my data
 
 function create_data() {
@@ -159,8 +159,8 @@ var margin = {
   bottom: 30,
   left: 50
 },
-    width = parseInt(d3.select("#chart").style("width")) - margin.left - margin.right,
-    height = parseInt(d3.select("#chart").style("height")) - margin.top - margin.bottom; // Define date parser
+    width = parseInt(d3.select("svg").style("width")) - margin.left - margin.right,
+    height = parseInt(d3.select("svg").style("height")) - margin.top - margin.bottom; // Define date parser
 // var parseDate = d3.timeParse("%Y-%m-%d %H:%M:%S");
 // Define scales
 // var xScale = d3.scaleTime().range([0, width]);
@@ -180,7 +180,7 @@ var line = d3.line().curve(d3.curveStep) // .curve(d3.curveStepAfter)
   return yScale(d); // return yScale(d["concentration"]);
 }); // Define svg canvas
 
-var svg = d3.select("#chart").attr("width", width + margin.left + margin.right).attr("height", height + margin.top + margin.bottom).append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+var svg = d3.select("svg").attr("width", width + margin.left + margin.right).attr("height", height + margin.top + margin.bottom).append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 svg = svg.append("g").attr("id", "graph");
 
 if (SETUP_ZOOM_AND_BG) {
@@ -203,7 +203,7 @@ yScale.domain(d3.extent(data.flat(), function (d, i) {
 // xScale.domain([0, data[0].length / 2]);
 // yScale.domain([0, 25]);
 
-svg.on("click", animate); // Place the axes on the chart
+d3.select("body").on("click", animate); // Place the axes on the chart
 
 svg.append("g").attr("class", "x axis").attr("transform", "translate(0," + height + ")").call(xAxis).append("text").attr("class", "label").attr("y", 15).attr("x", 55).attr("dy", ".71em") // .attr("dx", ".71em")
 .style("text-anchor", "beginning").text("time");
@@ -224,8 +224,8 @@ lines.append("path").attr("class", "line").attr("d", function (d) {
 // Define responsive behavior
 
 function resize() {
-  var width = parseInt(d3.select("#chart").style("width")) - margin.left - margin.right,
-      height = parseInt(d3.select("#chart").style("height")) - margin.top - margin.bottom; // Update the range of the scale with new width/height
+  var width = parseInt(d3.select("svg").style("width")) - margin.left - margin.right,
+      height = parseInt(d3.select("svg").style("height")) - margin.top - margin.bottom; // Update the range of the scale with new width/height
 
   xScale.range([0, width]);
   yScale.range([height, 0]); // Update the axis and text with the new scale
@@ -346,7 +346,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "62579" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "49561" + '/');
 
   ws.onmessage = function (event) {
     var data = JSON.parse(event.data);
