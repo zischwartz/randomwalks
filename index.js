@@ -1,18 +1,41 @@
 // https://bl.ocks.org/josiahdavis/7a02e811360ff00c4eef
 
+let ANIMATE_LINES = false;
+// ANIMATE_LINES = true;
+
+let SETUP_ZOOM_AND_BG = false;
+let n_lines = parseInt(process.env.N_LINES) || 200;
+let n_entries = parseInt(process.env.N_ENTRIES) || 150;
+// let mult = parseInt(process.env.MULT) || 0; // 1 gives us touching grid, 2 gives us spacing  stairs, 0 gives us a tree
+let mult = parseInt(process.env.MULT) || 0.01; // 1 gives us touching grid, 2 gives us spacing  stairs, 0 gives us a tree
+// let n_lines = 3;
+
+// console.log(process.env.DB_HOST);
 // reset for hmr in dev
 d3.select("#chart")
   .selectAll("*")
   .remove();
 
+// console.log(process.env.MULT)
 // generate my data
 function create_data() {
+  let start_at = -(n_lines / 2);
+  // let start_at = -5;
   let data = [];
-  for (var i = 0; i < 20; i++) {
-    let line = d3.range(-10 + i, 10 + i);
+  for (var i = start_at; i < n_lines + start_at; i++) {
+    //better
+    let line = [i * mult];
+    // let line = d3.range(-n_lines / 2 + i * mult, n_lines / 2 + i * mult);
+    // for simpler debugging
+    // let line = d3.range(-5 + i, 5 + i);
+    for (var j = 0; j < n_entries; j++) {
+      let offset = d3.shuffle([-1, 1])[0];
+      let last = line[line.length - 1];
+      line.push(last + offset);
+    }
     data.push(line);
-    // array[i]
   }
+
   return data;
 }
 
@@ -20,7 +43,7 @@ let data = create_data();
 
 // const csv_file_path = require("./giniLine.csv");
 // Define margins
-var margin = { top: 20, right: 80, bottom: 30, left: 50 },
+var margin = { top: 20, right: 0, bottom: 30, left: 50 },
   width =
     parseInt(d3.select("#chart").style("width")) - margin.left - margin.right,
   height =
@@ -46,12 +69,13 @@ var yAxis = d3.axisLeft().scale(yScale);
 var line = d3
   .line()
   .curve(d3.curveStep)
+  // .curve(d3.curveStepAfter)
   // .curve(d3.curveMonotoneX)
   .x(function(d, i) {
     return xScale(i);
     // return xScale(d["date"]);
   })
-  .y(function(d) {
+  .y(function(d, i) {
     return yScale(d);
     // return yScale(d["concentration"]);
   });
@@ -64,65 +88,54 @@ var svg = d3
   .append("g")
   .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-// Read in data
-// d3.csv(csv_file_path).then(function(data) {
-// if (error) throw error;
-// console.log(error, data);
+svg = svg.append("g").attr("id", "graph");
 
-// Set the color domain equal to the three product categories
-// var productCategories = d3.keys(data[0]).filter(function(key) {
-//   return key !== "Order Month" && key !== "metric";
-// });
-// color.domain(productCategories);
-
-// console.log(JSON.stringify(data, null, 2)) // to view the structure
-
-// Format the data field
-// data.forEach(function(d) {
-//   d["Order Month"] = parseDate(d["Order Month"]);
-// });
-//
-// // Filter the data to only include a single metric
-// var subset = data.filter(function(el) {
-//   return el.metric === "Quantity";
-// });
-// console.log(JSON.stringify(subset, null, 2))
-
-// Reformat data to make it more copasetic for d3
-// data = An array of objects
-// concentrations = An array of three objects, each of which contains an array of objects
-// var concentrations = productCategories.map(function(category) {
-//   return {
-//     category: category,
-//     datapoints: subset.map(function(d) {
-//       return { date: d["Order Month"], concentration: +d[category] };
-//     })
-//   };
-// });
-// console.log(JSON.stringify(concentrations, null, 2)) // to view the structure
+if (SETUP_ZOOM_AND_BG) {
+  svg
+    .append("rect")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom);
+  function zoomed() {
+    console.log("zoomm?");
+    d3.select("g#graph ").attr("transform", d3.event.transform);
+  }
+  d3.select("g#graph ").call(
+    d3
+      .zoom()
+      .scaleExtent([1 / 2, 4])
+      .on("zoom", zoomed)
+  );
+}
 
 // Set the domain of the axes
-xScale.domain(
-  d3.extent(data, function(d, i) {
-    return i;
-    // return d;
-  })
-);
+// hacky, assumes they're all the same length, we use the first one XXX
+xScale.domain([0, data[0].length]);
 
+// this fits them all
 yScale.domain(
   d3.extent(data.flat(), function(d, i) {
     return d;
   })
 );
 
-// yScale.domain([0.25, 0.5]);
-
+//  for close up debug
+// xScale.domain([0, data[0].length / 2]);
+// yScale.domain([0, 25]);
+svg.on("click", animate);
 // Place the axes on the chart
 svg
   .append("g")
   .attr("class", "x axis")
   .attr("transform", "translate(0," + height + ")")
-  .call(xAxis);
+  .call(xAxis)
+  .append("text")
+  .attr("class", "label")
+  .attr("y", 15)
+  .attr("x", 55)
+  .attr("dy", ".71em")
+  // .attr("dx", ".71em")
+  .style("text-anchor", "beginning")
+  .text("time");
 
 svg
   .append("g")
@@ -130,25 +143,26 @@ svg
   .call(yAxis)
   .append("text")
   .attr("class", "label")
-  .attr("y", 6)
+  .attr("y", 25)
+  .attr("x", -35)
   .attr("dy", ".71em")
-  .attr("dx", ".71em")
+  // .attr("dx", ".71em")
   .style("text-anchor", "beginning")
-  .text("Product Concentration");
+  .text("Y");
 
 // console.log(data);
-var products = svg
-  .selectAll(".category")
+var lines = svg
+  .selectAll(".trend_g")
   .data(data)
   .enter()
   .append("g")
-  .attr("class", "category");
-//
-products
+  .attr("class", "trend_g");
+
+lines
   .append("path")
   .attr("class", "line")
   .attr("d", function(d) {
-    console.log(d);
+    // console.log(d);
     return line(d);
   })
   .style("stroke", function(d, i) {
@@ -185,17 +199,85 @@ function resize() {
   svg.select(".y.axis").call(yAxis);
 
   // Force D3 to recalculate and update the line
+
   svg.selectAll(".line").attr("d", function(d) {
     return line(d);
   });
+  // and do our animation
+
+  if (ANIMATE_LINES) {
+    animate();
+  }
+
+  // .on("start", repeat);
 
   // Update the tick marks
   xAxis.ticks(Math.max(width / 75, 2));
   yAxis.ticks(Math.max(height / 50, 2));
 }
 
+// hacky flag
+let has_run = false;
+
+function animate() {
+  if (has_run) {
+    return;
+  }
+  console.log("animating!");
+  has_run = true;
+  svg
+    .selectAll(".line")
+    .attr("stroke-dasharray", "0 100000")
+    .transition()
+    .delay((d, i) => i * 1000)
+    .duration(20000)
+    .on("start", function repeat() {
+      d3.active(this)
+        .styleTween("stroke-dasharray", tweenDash)
+        .ease(d3.easeLinear)
+        .transition();
+    });
+}
+
+class Debouncer {
+  constructor() {
+    this.lookup = {};
+  }
+  cancel(identifier) {
+    let timer_id = this.lookup[identifier];
+    if (timer_id) {
+      clearTimeout(timer_id);
+      delete this.lookup[timer_id];
+    }
+  }
+  set(identifier, ms, cb) {
+    this.cancel(identifier);
+    let new_timer_id = setTimeout(cb, ms);
+    this.lookup[identifier] = new_timer_id;
+  }
+}
+
+let debounce = new Debouncer();
+
 // Call the resize function whenever a resize event occurs
-d3.select(window).on("resize", resize);
+d3.select(window).on("resize", () => debounce.set("resized", 450, resize));
+// need debounce!  XXX
 
 // Call the resize function
 resize();
+
+function tweenDash() {
+  var l = this.getTotalLength(),
+    i = d3.interpolateString("0," + l, l + "," + l);
+  return function(t) {
+    return i(t);
+  };
+}
+
+function tweenBack() {
+  var l = this.getTotalLength(),
+    i = d3.interpolateString(l + ",0", "0," + l);
+  return function(t) {
+    return i(t);
+  };
+}

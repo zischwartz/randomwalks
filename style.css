@@ -1,0 +1,34 @@
+body {
+  font: 10px sans-serif;
+  background-color: black;
+  margin: 0px;
+  padding: 0px;
+}
+.axis path,
+.axis line {
+  fill: none;
+  /* stroke: #000; */
+  stroke: white;
+  shape-rendering: crispEdges;
+}
+.axis text {
+  fill: white;
+}
+
+.line {
+  fill: none;
+  stroke-width: 1px;
+  opacity: 0.95;
+  mix-blend-mode: luminosity;
+  /* isolation: isolate; */
+}
+
+#chart {
+  width: 100vw;
+  /* width: 200vw; */
+  /* width: 100%; */
+  /* height: 100%; */
+  height: 100vh;
+  /* height: 100%; */
+  position: absolute;
+}

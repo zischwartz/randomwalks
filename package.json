@@ -1,7 +1,21 @@
 {
-  "name": "trends",
+  "name": "randomwalks",
   "version": "1.0.0",
   "main": "index.js",
   "author": "Zach Schwartz",
-  "license": "MIT"
+  "license": "MIT",
+  "scripts": {
+    "start": "parcel index.html",
+    "render": "node render.js && ~/dotfiles/imessage.sh 7037727269 '✅ Done'",
+    "build": "NODE_ENV=production parcel build --public-url=./ index.html -o index.html",
+    "gh": "gh-pages -d dist",
+    "date": "export DEPLOY_DATE=\"$(date)\"; echo $DEPLOY_DATE",
+    "prep": "echo 'pactrack.us' > dist/CNAME && cp src/screenshot.png dist/screenshot.png",
+    "deploy": "yarn build && yarn gh"
+  },
+  "devDependencies": {
+    "cssnano": "^4.1.7",
+    "gh-pages": "^2.0.1",
+    "puppeteer": "^1.10.0"
+  }
 }
