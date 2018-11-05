@@ -12,7 +12,7 @@ let mult = parseInt(process.env.MULT) || 0.01; // 1 gives us touching grid, 2 gi
 
 // console.log(process.env.DB_HOST);
 // reset for hmr in dev
-d3.select("#chart")
+d3.select("svg")
   .selectAll("*")
   .remove();
 
@@ -45,9 +45,9 @@ let data = create_data();
 // Define margins
 var margin = { top: 20, right: 0, bottom: 30, left: 50 },
   width =
-    parseInt(d3.select("#chart").style("width")) - margin.left - margin.right,
+    parseInt(d3.select("svg").style("width")) - margin.left - margin.right,
   height =
-    parseInt(d3.select("#chart").style("height")) - margin.top - margin.bottom;
+    parseInt(d3.select("svg").style("height")) - margin.top - margin.bottom;
 
 // Define date parser
 // var parseDate = d3.timeParse("%Y-%m-%d %H:%M:%S");
@@ -82,7 +82,7 @@ var line = d3
 
 // Define svg canvas
 var svg = d3
-  .select("#chart")
+  .select("svg")
   .attr("width", width + margin.left + margin.right)
   .attr("height", height + margin.top + margin.bottom)
   .append("g")
@@ -121,7 +121,7 @@ yScale.domain(
 //  for close up debug
 // xScale.domain([0, data[0].length / 2]);
 // yScale.domain([0, 25]);
-svg.on("click", animate);
+d3.select("body").on("click", animate);
 // Place the axes on the chart
 svg
   .append("g")
@@ -180,11 +180,9 @@ lines
 // Define responsive behavior
 function resize() {
   var width =
-      parseInt(d3.select("#chart").style("width")) - margin.left - margin.right,
+      parseInt(d3.select("svg").style("width")) - margin.left - margin.right,
     height =
-      parseInt(d3.select("#chart").style("height")) -
-      margin.top -
-      margin.bottom;
+      parseInt(d3.select("svg").style("height")) - margin.top - margin.bottom;
 
   // Update the range of the scale with new width/height
   xScale.range([0, width]);
