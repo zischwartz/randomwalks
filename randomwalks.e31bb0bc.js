@@ -127,19 +127,26 @@ d3.select("svg").selectAll("*").remove(); // console.log(process.env.MULT)
 // generate my data
 
 function create_data() {
-  var start_at = -(n_lines / 2); // let start_at = -5;
+  var start_at = 0; // let start_at = -(n_lines / 2);
+  // console.log(start_at);
+  // let start_at = -5;
 
   var data = [];
 
   for (var i = start_at; i < n_lines + start_at; i++) {
-    //better
-    var _line = [i * mult]; // let line = d3.range(-n_lines / 2 + i * mult, n_lines / 2 + i * mult);
+    // they all now just start at 0, much simple
+    // possibly add back in `mult` in the rendering or scale
+    var _line = [0]; //better
+    // let line = [i * mult];
+    // let line = d3.range(-n_lines / 2 + i * mult, n_lines / 2 + i * mult);
     // for simpler debugging
     // let line = d3.range(-5 + i, 5 + i);
 
-    for (var j = 0; j < n_entries; j++) {
-      var offset = d3.shuffle([-1, 1])[0];
-      var last = _line[_line.length - 1];
+    for (var j = 0; j < n_entries - 1; j++) {
+      // flip a coin
+      var offset = d3.shuffle([-1, 1])[0]; // get the the previous value
+
+      var last = _line[_line.length - 1]; // add the previous value to our new coin flip and push it to the line's array
 
       _line.push(last + offset);
     }
@@ -150,8 +157,27 @@ function create_data() {
   return data;
 }
 
-var data = create_data(); // const csv_file_path = require("./giniLine.csv");
+var data = create_data();
+var means = []; // console.log(data);
+
+for (var j = 0; j < n_entries; j++) {
+  var reducer = function reducer(accumulator, currentValue) {
+    return accumulator + currentValue[j];
+  };
+
+  var totals = data.reduce(reducer, 0);
+  means.push(totals / n_lines);
+}
+
+var all_means = [];
+
+for (var i = 0; i < n_lines; i++) {
+  all_means.push(means);
+} // console.log(all_means);
+// console.log(means.length);
+// const csv_file_path = require("./giniLine.csv");
 // Define margins
+
 
 var margin = {
   top: 20,
@@ -202,8 +228,9 @@ yScale.domain(d3.extent(data.flat(), function (d, i) {
 })); //  for close up debug
 // xScale.domain([0, data[0].length / 2]);
 // yScale.domain([0, 25]);
+// d3.select("body").on("click", animate);
 
-d3.select("body").on("click", animate); // Place the axes on the chart
+d3.select("body").on("click", animate_to_mean); // Place the axes on the chart
 
 svg.append("g").attr("class", "x axis").attr("transform", "translate(0," + height + ")").call(xAxis).append("text").attr("class", "label").attr("y", 15).attr("x", 55).attr("dy", ".71em") // .attr("dx", ".71em")
 .style("text-anchor", "beginning").text("time");
@@ -249,6 +276,24 @@ function resize() {
 
 
 var has_run = false;
+var is_showing_mean = false;
+
+function animate_to_mean() {
+  console.log("animate_to_mean");
+  var data_to_use = !is_showing_mean ? all_means : data;
+  is_showing_mean = !is_showing_mean;
+  var lines = svg.selectAll(".trend_g").data(data_to_use).transition().duration(2000) // .ease(d3.easeExp);
+  // .ease(d3.easeElastic);
+  .ease(is_showing_mean ? d3.easeExp : d3.easeBounce); // .enter()
+  // .append("g")
+  // .attr("class", "trend_g");
+
+  lines // .append("path")
+  .select("path").attr("d", function (d) {
+    // console.log(d);
+    return line(d);
+  }); // .transition();
+}
 
 function animate() {
   if (has_run) {
@@ -346,7 +391,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "49561" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "54918" + '/');
 
   ws.onmessage = function (event) {
     var data = JSON.parse(event.data);
