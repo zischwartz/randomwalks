@@ -1,5 +1,32 @@
 // https://bl.ocks.org/josiahdavis/7a02e811360ff00c4eef
 
+let {
+  occupations
+} = require("./node_modules/corpora/data/humans/occupations.json");
+let { verbs } = require("./node_modules/corpora/data/words/verbs.json");
+
+let time_units = [
+  "nanoseconds",
+  "microseconds",
+  "milliseconds",
+  "seconds",
+  "minutes",
+  "hours",
+  "days",
+  "weeks",
+  "months",
+  "years",
+  "decades",
+  "centuries",
+  "millenia"
+];
+let job = d3.shuffle(occupations)[0];
+let verb = d3.shuffle(verbs)[0]["past"];
+let y_title_text = `${job}s ${verb} `;
+let x_title_text = d3.shuffle(time_units)[0];
+// console.log(y_title_text);
+// console.log(corpora("occupations"));
+
 let ANIMATE_LINES = false;
 // ANIMATE_LINES = true;
 
@@ -65,11 +92,12 @@ for (var i = 0; i < n_lines; i++) {
 
 // const csv_file_path = require("./giniLine.csv");
 // Define margins
-var margin = { top: 20, right: 0, bottom: 30, left: 50 },
-  width =
-    parseInt(d3.select("svg").style("width")) - margin.left - margin.right,
-  height =
-    parseInt(d3.select("svg").style("height")) - margin.top - margin.bottom;
+// var margin = { top: 20, right: 0, bottom: 30, left: 50 };
+var margin = { top: 20, right: 0, bottom: 85, left: 85 };
+let width =
+  parseInt(d3.select("svg").style("width")) - margin.left - margin.right;
+let height =
+  parseInt(d3.select("svg").style("height")) - margin.top - margin.bottom;
 
 // Define date parser
 // var parseDate = d3.timeParse("%Y-%m-%d %H:%M:%S");
@@ -145,6 +173,7 @@ yScale.domain(
 // yScale.domain([0, 25]);
 // d3.select("body").on("click", animate);
 d3.select("body").on("click", animate_to_mean);
+d3.select("body").on("touchstart", animate_to_mean);
 // Place the axes on the chart
 svg
   .append("g")
@@ -153,12 +182,15 @@ svg
   .call(xAxis)
   .append("text")
   .attr("class", "label")
-  .attr("y", 15)
-  .attr("x", 55)
+  .attr("y", 35)
+  .attr("x", width / 2)
   .attr("dy", ".71em")
-  // .attr("dx", ".71em")
-  .style("text-anchor", "beginning")
-  .text("time");
+  .attr("dx", ".71em")
+  .style("text-anchor", "middle")
+  .attr("font-size", "20px")
+  .style("text-transform", "capitalize")
+  // .text("Time");
+  .text(x_title_text);
 
 svg
   .append("g")
@@ -166,12 +198,16 @@ svg
   .call(yAxis)
   .append("text")
   .attr("class", "label")
-  .attr("y", 25)
-  .attr("x", -35)
+  // x and y are reversed because we rotate it
+  .attr("y", -55)
+  .attr("x", -height / 2)
+  .attr("font-size", "20px")
   .attr("dy", ".71em")
-  // .attr("dx", ".71em")
-  .style("text-anchor", "beginning")
-  .text("Y");
+  .attr("dx", ".71em")
+  .style("text-transform", "capitalize")
+  .style("text-anchor", "middle")
+  .text(y_title_text)
+  .attr("transform", "rotate(-90)");
 
 // console.log(data);
 var lines = svg
@@ -242,7 +278,7 @@ let has_run = false;
 let is_showing_mean = false;
 
 function animate_to_mean() {
-  console.log("animate_to_mean");
+  // console.log("animate_to_mean");
   let data_to_use = !is_showing_mean ? all_means : data;
   is_showing_mean = !is_showing_mean;
 
