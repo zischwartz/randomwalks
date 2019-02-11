@@ -1,9 +1,17 @@
+// maybe add ?
+// https://typeitjs.com/
+
+// add legend
+
 // https://bl.ocks.org/josiahdavis/7a02e811360ff00c4eef
 
 let {
   occupations
 } = require("./node_modules/corpora/data/humans/occupations.json");
 let { verbs } = require("./node_modules/corpora/data/words/verbs.json");
+let { colors } = require("./node_modules/corpora/data/colors/crayola.json");
+
+console.log(colors);
 
 let time_units = [
   "nanoseconds",
@@ -31,8 +39,8 @@ let ANIMATE_LINES = false;
 // ANIMATE_LINES = true;
 
 let SETUP_ZOOM_AND_BG = false;
-let n_lines = parseInt(process.env.N_LINES) || 200;
-let n_entries = parseInt(process.env.N_ENTRIES) || 150;
+let n_lines = parseInt(process.env.N_LINES) || 120; //200;
+let n_entries = parseInt(process.env.N_ENTRIES) || 250; //150;
 // let mult = parseInt(process.env.MULT) || 0; // 1 gives us touching grid, 2 gives us spacing  stairs, 0 gives us a tree
 let mult = parseInt(process.env.MULT) || 0.01; // 1 gives us touching grid, 2 gives us spacing  stairs, 0 gives us a tree
 // let n_lines = 3;
@@ -106,10 +114,16 @@ let height =
 // var xScale = d3.scaleTime().range([0, width]);
 var xScale = d3.scaleLinear().range([0, width]);
 var yScale = d3.scaleLinear().range([height, 0]);
-var color = d3
-  .scaleOrdinal()
-  .range(d3.schemeCategory10)
-  .domain([0, data.length]);
+// var color = d3
+//   .scaleOrdinal()
+//   .range(d3.schemeCategory10)
+//   .domain([0, data.length]);
+
+let color = i => {
+  // console.log(x);
+  // return "red";
+  return colors[i]["hex"];
+};
 
 // Define axes
 var xAxis = d3.axisBottom().scale(xScale);
@@ -304,6 +318,7 @@ function animate_to_mean() {
     });
   // .transition();
 }
+// run the
 function animate() {
   if (has_run) {
     return;
@@ -343,12 +358,11 @@ class Debouncer {
 }
 
 let debounce = new Debouncer();
-
 // Call the resize function whenever a resize event occurs
 d3.select(window).on("resize", () => debounce.set("resized", 450, resize));
 // need debounce!  XXX
 
-// Call the resize function
+// Call the resize function to make it the size
 resize();
 
 function tweenDash() {
